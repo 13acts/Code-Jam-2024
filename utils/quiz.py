@@ -192,7 +192,6 @@ async def get_top_participants(
         user = await interaction.guild.fetch_member(user_id)
         top_users.append((user, score))
     return top_users
-    
 
 
 async def result_embed(
