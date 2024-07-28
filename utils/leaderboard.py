@@ -5,6 +5,8 @@ import aiohttp
 import discord
 import PIL
 from PIL import Image
+import PIL.ImageDraw
+import PIL.ImageFont
 
 BASE_PATH = Path(__file__).parent.parent
 ASSETS_PATH = BASE_PATH / "assets"
