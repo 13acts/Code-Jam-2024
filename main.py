@@ -4,6 +4,7 @@ from pathlib import Path
 
 import discord
 from cogwatch import watch
+from discord.app_commands import ContextMenu
 from discord.ext import commands
 from dotenv import load_dotenv
 
@@ -88,7 +89,7 @@ async def help(interaction: discord.Interaction) -> None:
     )
     commands = bot.tree.get_commands()
     for command in commands:
-        if command.name != "help":
+        if command.name != "help" and not isinstance(command, ContextMenu):
             desc = command.description
             params = ", ".join(
                 [parameters.name for parameters in command.parameters],
