@@ -150,7 +150,7 @@ class QuizCommand(commands.Cog):
                 )
 
             # Set timer
-            await asyncio.sleep(VOTING_TIME - 5)
+            await asyncio.sleep(VOTING_TIME)
             correct_users = await question_view.on_timeout()
 
             # Track correct answers
