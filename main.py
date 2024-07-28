@@ -55,9 +55,7 @@ class Bot(commands.Bot):
         """Setups hook for the bot."""
         # This copies the global commands over to your guild.
         await self.load_extensions()
-        self.tree._guild_commands[MY_GUILD.id] = self.tree._global_commands
-        self.tree._global_commands = {}
-        await self.tree.sync(guild=MY_GUILD)
+        await self.tree.sync()
 
     @watch(path="cogs", default_logger=False)
     async def on_ready(self) -> None:
@@ -88,7 +86,7 @@ async def help(interaction: discord.Interaction) -> None:
         description="List of commands and their functions",
         color=discord.Color.from_str("#bb8b3b"),
     )
-    commands = bot.tree.get_commands(guild=MY_GUILD)
+    commands = bot.tree.get_commands()
     for command in commands:
         if command.name != "help":
             desc = command.description

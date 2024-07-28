@@ -9,6 +9,7 @@ import wikipedia
 from discord import app_commands
 from discord.ext import commands
 from repositories.wiki_repo import FactsView
+from utils.database import db
 from utils.gemini import gemini_client
 from utils.wiki import create_false_statement, get_wiki_facts, get_wiki_image
 
@@ -231,4 +232,15 @@ class FactCommand(commands.Cog):
 
 async def setup(bot: commands.Bot) -> None:
     """Setups the Fact command."""
-    await bot.add_cog(FactCommand(bot))
+    cog = FactCommand(bot)
+
+    @bot.tree.context_menu(name="short")
+    async def shortify_context(interaction: discord.Interaction, message: discord.Message) -> None:
+        """Summarize the conversation in-between 2 messages."""
+        messages = await db.set_shortify_cache(interaction.user.id, message.channel.id, message.id)
+        if messages:
+            await cog.shortify.callback(cog, interaction, str(messages[0]), str(messages[1]))
+        else:
+            await interaction.response.send_message("Select another message to summarize.", ephemeral=True)
+
+    await bot.add_cog(cog)

@@ -29,7 +29,7 @@ build-backend = "poetry.core.masonry.api"
 [tool.taskipy.tasks]
 start = "python main.py"
 lint = "pre-commit run --all-files"
-build = "docker build -t code-jam-bot -target=runtime ."
+build = "docker build -t code-jam-bot --target=runtime ."
 run = "docker run -d code-jam-bot"
 
 [tool.ruff]
