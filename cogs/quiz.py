@@ -1,4 +1,5 @@
 import asyncio
+import io
 import time
 from collections import defaultdict
 
@@ -6,10 +7,12 @@ import discord
 from discord.ext import commands
 from repositories import quiz_repo
 from utils.database import db
+from utils.leaderboard import generate_quiz_leaderboard_image
 from utils.quiz import (
     create_api_call,
     get_quizzes_with_token,
     get_sub_topic_id,
+    get_top_participants,
     get_topic_id,
     has_sub_topic,
     result_embed,
@@ -147,7 +150,7 @@ class QuizCommand(commands.Cog):
                 )
 
             # Set timer
-            await asyncio.sleep(VOTING_TIME)
+            await asyncio.sleep(VOTING_TIME - 5)
             correct_users = await question_view.on_timeout()
 
             # Track correct answers
@@ -163,6 +166,15 @@ class QuizCommand(commands.Cog):
         # Results =============================================================================
         embed = await result_embed(interaction, participants, 3)
         await interaction.channel.send(content="## Quiz ended", embed=embed)
+        top_participants = await get_top_participants(interaction, participants)
+        if top_participants:
+            image = await generate_quiz_leaderboard_image(top_participants)
+            with io.BytesIO() as image_binary:
+                image.save(image_binary, "PNG")
+                image_binary.seek(0)
+                await interaction.channel.send(
+                    file=discord.File(fp=image_binary, filename="leaderboard.png"),
+                )
 
         # Mark quiz ended
         await db.set_command_inactive("quiz", channel_id)

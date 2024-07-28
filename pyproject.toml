@@ -16,6 +16,7 @@ cogwatch = "^3.3.1"
 google-generativeai = "^0.7.2"
 beautifulsoup4 = "^4.12.3"
 wikipedia = "^1.4.0"
+pillow = "^10.4.0"
 
 [tool.poetry.group.dev.dependencies]
 ruff = "^0.5.3"
