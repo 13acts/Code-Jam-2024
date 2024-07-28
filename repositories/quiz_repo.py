@@ -113,6 +113,10 @@ class BaseVotingButton(Button):
         self.votes += 1
         self.label = f"{self.label_text} ({self.votes})"
 
+        # Update Cancel button
+        cancel_button = self.voting_view.cancel_button
+        cancel_button.label = f"Cancel ({cancel_button.votes}/{len(self.voting_view.user_votes)})"
+
         # Update the view
         await interaction.response.edit_message(view=self.voting_view)
 
@@ -205,7 +209,6 @@ class CancelButton(Button):
 
     def __init__(self, voting_view: VotingView, row: int) -> None:
         super().__init__(label="Cancel", row=row, style=discord.ButtonStyle.red)
-        self.label_text = "Cancel"
         self.votes = 0
         self.voting_view = voting_view
         self.is_cancelled = False
@@ -220,7 +223,7 @@ class CancelButton(Button):
         user_selections["cancel"] = not (cancel_value)
         self.voting_view.user_votes[user_id] = user_selections
         self.votes += 1 if not (cancel_value) else -1
-        self.label = f"{self.label_text} ({self.votes}/{len(self.voting_view.user_votes)})"
+        self.label = f"Cancel ({self.votes}/{len(self.voting_view.user_votes)})"
 
         # Determine cancel state
         self.is_cancelled = False if self.votes == 0 else self.votes > len(self.voting_view.user_votes) / 2
