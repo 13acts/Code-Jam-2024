@@ -18,19 +18,63 @@ model = genai.GenerativeModel("gemini-1.5-flash")
 
 
 def get_wiki_facts(prompt: str, number: int = 5) -> list:
-    """Return {number} amount of facts based on {prompt}."""
+    """Fetch factual one liners from Wikipedia.
+
+    Parameters
+    ----------
+    prompt : str
+        Name of the article to fetch facts from.
+    number : int, optional
+        Number of facts (default is 5).
+
+    Returns
+    -------
+    list
+        *number* amount of facts based on *prompt*.
+
+    """
     return random.sample(split_into_sentences(wikipedia.summary(prompt, auto_suggest=False)), k=number)
 
 
 def create_false_statement(fact: str) -> str:
-    """Get a false fact based on a true fact."""
+    """Get a false fact based on a true fact.
+
+    Parameters
+    ----------
+    fact : str
+        The true fact.
+
+    Returns
+    -------
+    str
+        Falsified version of the fact.
+
+    """
     prompt = f"Create a false fact for a True False quiz based on this fact: {fact} in one line. Answer directly and only the false statement."  # noqa: E501
     response = model.generate_content(prompt)
     return response.text
 
 
 def get_wiki_image(search_term: str) -> str | bool:
-    """Return featured image URL of search."""
+    """Return featured image URL of search.
+
+    This function may fail because of many reasons, e.g.
+    if the connection failed, or if the parsing did not
+    go as expected. False is returned to indicate failure.
+
+    Parameters
+    ----------
+    search_term : str
+        The search term to use for the Wiki image search.
+
+    Returns
+    -------
+    str
+        URL of the image.
+    bool
+        Returns False if any error occured.
+
+    """
     try:
         wikipedia.set_lang("en")
         result = wikipedia.search(search_term, results=1)
@@ -73,16 +117,21 @@ multiple_dots = r"\.{2,}"
 
 
 def split_into_sentences(text: str) -> list[str]:
-    """Split the text into sentences.
+    r"""Split the text into sentences.
 
-    If the text contains substrings "<prd>" or "<stop>", they would lead
+    If the text contains substrings "\<prd\>" or "\<stop\>", they would lead
     to incorrect splitting because they are used as markers for splitting.
 
-    :param text: text to be split into sentences
-    :type text: str
+    Parameters
+    ----------
+    text : str
+        Text to be split into sentences.
 
-    :return: list of sentences
-    :rtype: list[str]
+    Returns
+    -------
+    list[str]
+        list of sentences
+
     """
     text = " " + text + "  "
     text = text.replace("\n", " ")

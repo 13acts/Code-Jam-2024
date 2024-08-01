@@ -12,7 +12,15 @@ from utils.database import db
 
 
 def fetch_categories() -> dict:
-    """Create structured categories."""
+    """Create structured categories.
+
+    Note that the returned instance is a defaultdict.
+
+    Returns
+    -------
+    A dictionary structuring all categories.
+
+    """
     response = requests.get("https://opentdb.com/api_category.php", timeout=(3, 5))
     raw_categories = response.json()["trivia_categories"]
 
@@ -37,17 +45,58 @@ TOPICS_POOL = fetch_categories()
 
 
 def has_sub_topic(topic: str) -> bool:
-    """Determine if the topic name has subtopics or not."""
+    """Determine if the topic name has subtopics or not.
+
+    Parameters
+    ----------
+    topic : str
+        A topic.
+
+    Returns
+    -------
+    bool
+        Whether or not the topic has a subtopic.
+
+    """
     return not isinstance(TOPICS_POOL[topic], int)
 
 
 def get_topic_id(topic: str) -> int:
-    """Return opentdb's root topic id from name."""
+    """Return opentdb's root topic id from name.
+
+    Parameters
+    ----------
+    topic : str
+        A topic.
+
+    Returns
+    -------
+    int
+        The corresponding topic ID.
+
+    """
     return TOPICS_POOL[topic]
 
 
 def get_sub_topic_id(topic: str, topic_id_correct_count: dict) -> int:
-    """Return subtopic id from name and possibly count of how many times the topic is correct."""
+    """Return subtopic id from topic name.
+
+    Internally recalculates how many times a subtopic is correct
+    and adjusts weights thus. Note that `topic` must have a subtopic.
+
+    Parameters
+    ----------
+    topic : str
+        A topic that has a subtopic.
+    topic_id_correct_count : dict
+        Topic IDs and their correct counts.
+
+    Returns
+    -------
+    int
+        ID of the cherry picked subtopic.
+
+    """
     all_topic_ids = list(TOPICS_POOL[topic].values())
     if not topic_id_correct_count:
         return random.choice(all_topic_ids)  # noqa: S311
@@ -64,7 +113,21 @@ def get_sub_topic_id(topic: str, topic_id_correct_count: dict) -> int:
 
 
 def weighted_selection(all_ids: list, ordered_correct_count: list) -> int:
-    """Assign weights algorithm. The higher the order of correct_count, the lower the weight."""
+    """Assign weights algorithm. The higher the order of correct_count, the lower the weight.
+
+    Parameters
+    ----------
+    all_ids : list
+        List of all topic ids.
+    ordered_correct_count : list
+        A descending ordered list of correct counts.
+
+    Returns
+    -------
+    int
+        ID of the cherry picked subtopic.
+
+    """
     weights = [len(all_ids)] * len(all_ids)
 
     max_weight = len(ordered_correct_count)
@@ -81,7 +144,27 @@ def create_api_call(
     difficulty: str | None = None,
     type: str | None = None,
 ) -> str:
-    """Create API call. Could've used params but it'll interfere with token."""
+    """Create an URL that calls Open Trivia Database API.
+
+    Parameters
+    ----------
+    number_of_q : int
+        Number of questions.
+    category : int | None, optional
+        Optionally specified integer that corresponds to a category.
+        Defaults to None.
+    difficulty : str | None, optional
+        Optionally specified difficulty. Defaults to None.
+    type : str | None, optional
+        Optionally specified type (topic). Defaults to None.
+
+    Returns
+    -------
+    str
+        The query string.
+
+    """
+    # Could've used params but it'll interfere with token.
     url = f"https://opentdb.com/api.php?amount={number_of_q}"
     if category:
         url += f"&category={category}"
@@ -93,7 +176,21 @@ def create_api_call(
 
 
 def fetch_json(url: str) -> list:
-    """Fetch API from opentdb. Return False if bad response code."""
+    """Fetch API from opentdb. Return False if bad response code.
+
+    Parameters
+    ----------
+    url : str
+        An url as returned by a call to `create_api_call`.
+
+    Returns
+    -------
+    list
+        A collection of trivia questions and answers.
+    bool
+        Returns False if response code is nonzero (indicating failure).
+
+    """
     try:
         response = requests.get(url, timeout=(3, 5))
     except requests.exceptions.Timeout:
@@ -106,7 +203,20 @@ def fetch_json(url: str) -> list:
 
 
 def fetch_quizzes(json: list) -> list:
-    """Return list of quizzes based on json."""
+    """Return list of quizzes based on json.
+
+    Parameters
+    ----------
+    json : list
+        A collection as returned by `fetch_json`.
+
+    Returns
+    -------
+    list
+        A collection of quiz dictionaries having keys
+        question, correct_answer, incorrect_answers.
+
+    """
     quizzes = []
     for quiz in json:
         quiz["question"] = html.unescape(quiz["question"])
@@ -126,7 +236,26 @@ async def fetch_token() -> str:
 
 
 async def get_quizzes_with_token(server_id: int, api_url: str) -> list:
-    """Return list of quizzes with token check."""
+    """Return list of quizzes with token check.
+
+    If there is an active quiz in a channel, send that quiz token
+    along with this request. It ensures that old questions are not fetched again.
+
+    Parameters
+    ----------
+    channel_id : int
+        A Discord Channel ID.
+    server_id : int
+        A Discord Server ID.
+    api_url : str
+        An API call URL to opentdb.
+
+    Returns
+    -------
+    list
+        A collection of quizzes as returned by `fetch_quizzes`.
+
+    """
     # If token exists
     if current_token := await db.get_token(server_id):
         # Current token works
@@ -147,7 +276,24 @@ async def get_quizzes_with_token(server_id: int, api_url: str) -> list:
 
 
 def learn_more_url(question: str) -> str:
-    """Return the first Wikipedia Google search result URL for the question."""
+    """Return the first Wikipedia Google search result URL for the question.
+
+    Parameters
+    ----------
+    question : str
+        A humane Google search query.
+
+    Returns
+    -------
+    str
+        The first URL of the Wikipedia Google search result.
+
+    Raises
+    ------
+    HTTPError
+        If the status code indicated failure (is in range 400-600).
+
+    """
     query = question + " site:en.wikipedia.org"
     url = "https://www.google.com/search"
 

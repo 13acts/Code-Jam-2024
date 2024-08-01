@@ -15,15 +15,39 @@ from utils.wiki import create_false_statement, get_wiki_facts, get_wiki_image
 
 
 class FactCommand(commands.Cog):
-    """Fact commands cog."""
+    """Fact commands cog.
+
+    Parameters
+    ----------
+    bot
+        A `commands.Bot` instance.
+        Should hold the bot that this cog is associted with,
+        i.e. the bot that loads this extension.
+
+    Attributes
+    ----------
+    bot
+        A `commands.Bot` instance.
+        Should hold the bot that this cog is associted with,
+        i.e. the bot that loads this extension.
+
+    """
 
     def __init__(self, bot: commands.Bot) -> None:
-        """Initialize FactCommand cog."""
         self.bot = bot
 
     @app_commands.command(name="discuss")
     async def discuss(self, interaction: discord.Interaction, topic: str) -> None:
-        """Create a discussion on the given topic."""
+        """Create a discussion on the given topic.
+
+        Parameters
+        ----------
+        interaction
+            The interaction that represents this command invocation.
+        topic : str
+            Discussion topic.
+
+        """
         await interaction.response.defer()
 
         # Generate convo from gemini
@@ -80,7 +104,16 @@ class FactCommand(commands.Cog):
 
     @app_commands.command(name="summarize")
     async def summarize(self, interaction: discord.Interaction, text: str) -> None:
-        """Summarize the given text."""
+        """Summarize the given text.
+
+        Parameters
+        ----------
+        interaction
+            The interaction that represents this command invocation.
+        text : str
+            The text to summarize.
+
+        """
         await interaction.response.defer()
         summary = await gemini_client.summarize_conversation(text)
         if summary:
@@ -102,7 +135,16 @@ class FactCommand(commands.Cog):
 
     @app_commands.command(name="shortify")
     async def shortify(self, interaction: discord.Interaction, start: str, end: str) -> None:
-        """Summarize the conversation in-between 2 messages."""
+        """Summarize the conversation in-between 2 messages.
+
+        Parameters
+        ----------
+        interaction
+            The interaction that represents this command invocation.
+        start, end : str
+            Message links or message IDs to the start and end messages.
+
+        """
 
         def parse_msg_id(arg: str) -> str | ValueError:
             """Verify the input arg is either msg link or msg id."""
@@ -167,7 +209,18 @@ class FactCommand(commands.Cog):
 
     @app_commands.command()
     async def factpedia(self, interaction: discord.Interaction, entry: str, number: int = 5) -> None:
-        """Generate a list of Wikipedia statements about topic. Find the one that is incorrect."""
+        """Generate a list of statements about topic. User must find the one that is incorrect.
+
+        Parameters
+        ----------
+        interaction
+            The interaction that represents this command invocation.
+        entry : str
+            Wikipedia entry to fetch facts from.
+        number : int
+            Number of statements.
+
+        """
         await interaction.response.defer()
 
         # Fetching facts from Wiki

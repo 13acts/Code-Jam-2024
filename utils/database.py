@@ -8,10 +8,25 @@ logger = logging.getLogger("db")
 
 
 class Database:
-    """Database class."""
+    """Database class. Manages a `AsyncIOMotorClient` internally.
+
+    Parameters
+    ----------
+    database : str
+        A string of the form mongodb://HOST:PORT
+        where HOST is host address
+        and PORT is port number
+
+    Attributes
+    ----------
+    db
+        An `AsyncIOMotorDatabase` database client instance.
+    scores, command_cache
+        `AsyncIOMotorCollection` collection client instances.
+
+    """
 
     def __init__(self, database: str) -> None:
-        """Form Database Connection."""
         self.client = motor.motor_asyncio.AsyncIOMotorClient(database)
         self.db = self.client["bot-data"]
 
@@ -23,12 +38,39 @@ class Database:
         logger.info("Connected to MongoDB database.")
 
     async def get_score(self, user_id: int, server_id: int) -> int:
-        """Get the score of a user."""
+        """Get the score of a user.
+
+        A user who hasnt attempted the game has a default score of 0.
+
+        Parameters
+        ----------
+        user_id : int
+            A Discord User ID.
+        server_id : int
+            A Discord Server ID.
+
+        Returns
+        -------
+        int
+            Score of a user.
+
+        """
         score = await self.scores.find_one({"user_id": user_id, "server_id": server_id})
         return score["score"] if score else 0
 
     async def set_score(self, user_id: int, server_id: int, score: int) -> None:
-        """Set the score of a user."""
+        """Set the score of a user.
+
+        Parameters
+        ----------
+        user_id : int
+            A Discord User ID.
+        server_id : int
+            A Discord Server ID.
+        score : int
+            New score.
+
+        """
         await self.scores.update_one(
             {"user_id": user_id, "server_id": server_id},
             {"$set": {"score": score}},
@@ -46,14 +88,37 @@ class Database:
         return leaderboard
 
     async def command_is_active(self, command_name: str, channel_id: int) -> bool:
-        """Check if a command is active."""
+        """Check if a command is active.
+
+        Parameters
+        ----------
+        command_name : str
+            Name of the command.
+        channel_id : int
+            A Discord Channel ID.
+
+        Returns
+        -------
+        bool
+            Whether or not the command is active on said channel.
+
+        """
         command = await self.commands_cache.find_one(
             {"command_name": command_name, "channel_id": channel_id},
         )
         return command["active"] if command else False
 
     async def set_command_active(self, command_name: str, channel_id: int) -> None:
-        """Set a command as active."""
+        """Set a command as active.
+
+        Parameters
+        ----------
+        command_name : str
+            Name of the command.
+        channel_id : int
+            ID of the Discord Channel where the command should be registered active.
+
+        """
         await self.commands_cache.update_one(
             {"command_name": command_name, "channel_id": channel_id},
             {"$set": {"active": True}},
@@ -61,7 +126,16 @@ class Database:
         )
 
     async def set_command_inactive(self, command_name: str, channel_id: int) -> None:
-        """Set a command as inactive."""
+        """Set a command as inactive.
+
+        Parameters
+        ----------
+        command_name : str
+            Name of the command.
+        channel_id : int
+            ID of the Discord Channel where the command should be registered inactive.
+
+        """
         await self.commands_cache.update_one(
             {"command_name": command_name, "channel_id": channel_id},
             {"$set": {"active": False}},
