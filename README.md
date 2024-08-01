@@ -31,9 +31,18 @@ python -m pip install poetry
 poetry install
 ```
 
-4. Create an .env file with environment values set as in the .env.sample file.
+4. Activate .venv
+```sh
+poetry shell
+```
 
-5. Run the bot.
+5. Create an .env file with environment values set as in the .env.sample file.
+- `TOKEN`: Discord Bot Token
+- `SERVER`: Discord server ID (used for development only)
+- `DATABASE`: Connection to MongoDB
+- `GOOGLE_API_KEY`: API Token from Google Gemini
+
+7. Run the bot.
 ```sh
 python main.py
 ```
