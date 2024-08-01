@@ -8,7 +8,18 @@ VOTING_TIME = 10
 
 
 class VotingView(View):
-    """Topic voting message."""
+    """Topic voting message. Subclasses `View`.
+
+    Attributes
+    ----------
+    user_votes : dict
+        Collection of topics and their corresponding votes.
+    topic_ids : dict
+        A topic pool as returned by `utils.quiz.fetch_categories`.
+    cancel_button
+        A `CancelButton` instance corresponding to a cancel button in this voting UI.
+
+    """
 
     def __init__(self) -> None:
         super().__init__(timeout=None)
@@ -74,7 +85,35 @@ class VotingView(View):
 
 
 class BaseVotingButton(Button):
-    """Base for voting button layouts."""
+    """Base for voting button layouts. Subclasses `Button`.
+
+    Parameters
+    ----------
+    label : str
+        Button label.
+    value : int | str
+        Value registered by button press.
+    voting_view
+        The `VotingView` instance this button is added to.
+    votes : int
+        Number of votes for this button (topic).
+    row : int
+        The row this button belongs to.
+    style
+        An instance of `discord.ButtonStyle`.
+
+    Attributes
+    ----------
+    label_text : str
+        Button label.
+    value : int | str
+        Value registered by button press.
+    voting_view
+        The `VotingView` instance this button is added to.
+    votes : int
+        Number of votes for this button (topic).
+
+    """
 
     def __init__(
         self,
@@ -91,7 +130,14 @@ class BaseVotingButton(Button):
         self.voting_view = voting_view
 
     async def callback(self, interaction: discord.Interaction) -> None:
-        """Register and update buttons."""
+        """Register and update buttons.
+
+        Parameters
+        ----------
+        interaction
+            The interaction that represents this command invocation.
+
+        """
         user_id = interaction.user.id
         previous_selection = self.voting_view.user_votes.get(user_id, {})
 
@@ -122,14 +168,40 @@ class BaseVotingButton(Button):
 
 
 class TopicButton(BaseVotingButton):
-    """Topic select button layouts."""
+    """Topic select button layouts. Subclasses `BaseVotingButton`.
+
+    Parameters
+    ----------
+    label : str
+        Button label.
+    value : int | str
+        Value registered by button press.
+    voting_view
+        The `VotingView` instance this button is added to.
+    row : int
+        The row this button belongs to.
+
+    """
 
     def __init__(self, label: str, value: str, voting_view: VotingView, row: int) -> None:
         super().__init__(label=label, value=value, voting_view=voting_view, row=row, style=discord.ButtonStyle.primary)
 
 
 class NumQuestionButton(BaseVotingButton):
-    """Button for selecting the number of questions."""
+    """Button for selecting the number of questions.
+
+    Parameters
+    ----------
+    label : str
+        Button label.
+    count : int
+        Number of questions.
+    voting_view
+        The `VotingView` instance this button is added to.
+    row : int
+        The row this button belongs to.
+
+    """
 
     def __init__(self, label: str, count: int, voting_view: VotingView, row: int) -> None:
         super().__init__(
@@ -142,7 +214,39 @@ class NumQuestionButton(BaseVotingButton):
 
 
 class QuestionView(View):
-    """Each question in the quiz."""
+    """Each question in the quiz. Subclasses `View`.
+
+    Parameters
+    ----------
+    i : int
+        Question index.
+    question : str
+        The question.
+    correct : str
+        Correct answer to question.
+    incorrects : list
+        Collection of incorrect answers.
+    voting_view
+        The `VotingView` instance this button is added to.
+    type : str
+        Question type.
+
+    Attributes
+    ----------
+    user_answers : dict
+        A dictionary corresponding to users and answers.
+    i : int
+        Question index.
+    question : str
+        The question.
+    correct : str
+        Correct answer to question.
+    incorrects : list
+        Collection of incorrect answers.
+    url : str
+        An URL as returned by `utils.wiki.learn_more_url`.
+
+    """
 
     def __init__(self, i: int, question: str, correct: str, incorrects: list, type: str) -> None:
         super().__init__(timeout=None)
@@ -164,7 +268,14 @@ class QuestionView(View):
             self.add_item(AnswerButton(label=answer, question_view=self))
 
     async def on_timeout(self) -> list:
-        """After timeout, highlight correct answer."""
+        """After timeout, highlight correct answer.
+
+        Returns
+        -------
+        list
+            IDs of users who answered correctly.
+
+        """
         # Highlight correct answer, disable all buttons
         for child in self.children:
             if child.label == self.correct:
@@ -184,7 +295,21 @@ class QuestionView(View):
 
 
 class AnswerButton(Button):
-    """Button for selecting the answer."""
+    """Button for selecting the answer. Subclasses `Button`.
+
+    Parameters
+    ----------
+    label : str
+        Button label.
+    question_view
+        The `QuestionView` instance this button is added to.
+
+    Attributes
+    ----------
+    question_view
+        The `QuestionView` instance this button is added to.
+
+    """
 
     def __init__(self, label: str, question_view: QuestionView) -> None:
         super().__init__(label=label, style=discord.ButtonStyle.primary)
@@ -198,14 +323,41 @@ class AnswerButton(Button):
 
 
 class LearnMoreButton(Button):
-    """Button to open wiki page regarding the question."""
+    """Button to open wiki page regarding the question. Subclasses `Button`.
+
+    Parameters
+    ----------
+    url : str
+        An url as returned by `utils.wiki.learn_more_url`.
+
+    """
 
     def __init__(self, url: str) -> None:
         super().__init__(label="Learn more", url=url, style=discord.ButtonStyle.secondary)
 
 
 class CancelButton(Button):
-    """Cancel the quiz. Only available during voting phase."""
+    """Cancel the quiz. Only available during voting phase. Subclasses `Button`.
+
+    Parameters
+    ----------
+    voting_view
+        The `VotingView` instance this button is added to.
+    row : int
+        The row this button belongs to.
+
+    Attributes
+    ----------
+    label_text : str
+        Label of cancel button. "Cancel" by default.
+    votes : int
+        Number of cancel votes.
+    voting_view
+        The `VotingView` instance this button is added to.
+    is_cancelled : bool
+        Indicates cancel status.
+
+    """
 
     def __init__(self, voting_view: VotingView, row: int) -> None:
         super().__init__(label="Cancel", row=row, style=discord.ButtonStyle.red)
